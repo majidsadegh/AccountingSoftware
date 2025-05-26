@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نرم‌افزار حسابداری - انبار</title>
+  <link href="./output.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body dir="rtl" class="min-h-screen bg-light font-sans transition-colors duration-300" id="theme-body">
+  <div class="container mx-auto p-4 max-w-5xl">
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold text-dark">انبار - <span id="username-display"></span></h1>
+      <div class="flex space-x-2">
+        <button onclick="openModal('add-inventory-modal')" class="btn btn-green flex items-center">
+          <i class="fas fa-plus w-4 h-4 mr-1"></i>
+          ثبت در انبار
+        </button>
+        <a href="index.html" class="btn btn-gray flex items-center">
+          <i class="fas fa-home w-4 h-4 mr-1"></i>
+          بازگشت
+        </a>
+      </div>
+    </div>
+
+    <!-- جستجو -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-search w-5 h-5 mr-1 text-green-600"></i>
+        جستجوی انبار
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input id="search-inventory-part-name" type="text" placeholder="نام قطعه" class="input" />
+        <button onclick="searchInventory()" class="btn btn-green flex items-center justify-center">
+          <i class="fas fa-search w-4 h-4 mr-1"></i>
+          جستجو
+        </button>
+      </div>
+    </div>
+
+    <!-- جدول انبار -->
+    <div class="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-warehouse w-5 h-5 mr-1 text-green-600"></i>
+        موجودی انبار
+      </h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>شناسه</th>
+            <th>نام قطعه</th>
+            <th>موجودی</th>
+            <th>ویرایش</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body"></tbody>
+      </table>
+    </div>
+
+    <!-- مودال ثبت انبار -->
+    <div id="add-inventory-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-warehouse w-5 h-5 mr-1 text-green-600"></i>
+          ثبت در انبار
+        </h2>
+        <div class="space-y-3">
+          <input id="inventory-part-name" type="text" placeholder="نام قطعه" class="input" />
+          <input id="inventory-quantity" type="number" placeholder="تعداد موجودی" class="input" />
+          <div class="flex space-x-2">
+            <button onclick="addInventory()" class="btn btn-green flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ثبت
+            </button>
+            <button onclick="closeModal('add-inventory-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- مودال ویرایش انبار -->
+    <div id="edit-inventory-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-edit w-5 h-5 mr-1 text-green-600"></i>
+          ویرایش انبار
+        </h2>
+        <div class="space-y-3">
+          <input id="edit-inventory-part-name" type="text" placeholder="نام قطعه" class="input" />
+          <input id="edit-inventory-quantity" type="number" placeholder="تعداد موجودی" class="input" />
+          <input id="edit-inventory-id" type="hidden" />
+          <div class="flex space-x-2">
+            <button onclick="updateInventory()" class="btn btn-green flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ذخیره
+            </button>
+            <button onclick="closeModal('edit-inventory-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!currentUser) window.location.href = 'index.html';
+    document.getElementById('username-display').textContent = currentUser.username;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme') || 'light';
+      applyTheme(theme);
+      loadInventory();
+    });
+
+    function applyTheme(theme) {
+      const body = document.getElementById('theme-body');
+      if (theme === 'dark') {
+        body.classList.remove('bg-light');
+        body.classList.add('bg-dark');
+        body.querySelectorAll('.text-dark').forEach(el => {
+          el.classList.remove('text-dark');
+          el.classList.add('text-light');
+        });
+      } else {
+        body.classList.remove('bg-dark');
+        body.classList.add('bg-light');
+        body.querySelectorAll('.text-light').forEach(el => {
+          el.classList.remove('text-light');
+          el.classList.add('text-dark');
+        });
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      if (modalId === 'add-inventory-modal') {
+        document.getElementById('inventory-part-name').value = '';
+        document.getElementById('inventory-quantity').value = '';
+      } else if (modalId === 'edit-inventory-modal') {
+        document.getElementById('edit-inventory-part-name').value = '';
+        document.getElementById('edit-inventory-quantity').value = '';
+        document.getElementById('edit-inventory-id').value = '';
+      }
+    }
+
+    async function loadInventory(filter = {}) {
+      try {
+        const url = new URL('http://localhost:3000/inventory');
+        if (filter.partName) url.searchParams.append('partName', filter.partName);
+        const response = await fetch(url);
+        const inventory = await response.json();
+        const tbody = document.getElementById('inventory-body');
+        tbody.innerHTML = '';
+        if (inventory.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">هیچ موجودی یافت نشد</td></tr>';
+        } else {
+          inventory.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${item.id}</td>
+              <td>${item.partName}</td>
+              <td>${item.quantity}</td>
+              <td><button onclick='editInventory(${item.id}, "${item.partName}", ${item.quantity})' class="btn btn-green flex items-center"><i class="fas fa-edit w-4 h-4 mr-1"></i>ویرایش</button></td>
+              <td><button onclick='deleteInventory(${item.id})' class="btn btn-red flex items-center"><i class="fas fa-trash w-4 h-4 mr-1"></i>حذف</button></td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading inventory:', error);
+        document.getElementById('inventory-body').innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">خطا در بارگذاری</td></tr>';
+      }
+    }
+
+    async function searchInventory() {
+      const partName = document.getElementById('search-inventory-part-name').value;
+      const filter = {};
+      if (partName) filter.partName = partName;
+      loadInventory(filter);
+    }
+
+    async function addInventory() {
+      const partName = document.getElementById('inventory-part-name').value;
+      const quantity = parseInt(document.getElementById('inventory-quantity').value);
+      if (!partName || !quantity) {
+        alert('لطفاً همه فیلدها را پر کنید');
+        return;
+      }
+      try {
+        await fetch('http://localhost:3000/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partName, quantity })
+        });
+        loadInventory();
+        closeModal('add-inventory-modal');
+      } catch (error) {
+        alert('خطا در ثبت: ' + error.message);
+      }
+    }
+
+    function editInventory(id, partName, quantity) {
+      document.getElementById('edit-inventory-id').value = id;
+      document.getElementById('edit-inventory-part-name').value = partName;
+      document.getElementById('edit-inventory-quantity').value = quantity;
+      openModal('edit-inventory-modal');
+    }
+
+    async function updateInventory() {
+      const id = document.getElementById('edit-inventory-id').value;
+      const partName = document.getElementById('edit-inventory-part-name').value;
+      const quantity = parseInt(document.getElementById('edit-inventory-quantity').value);
+      if (!partName || !quantity) {
+        alert('لطفاً همه فیلدها را پر کنید');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/inventory/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partName, quantity })
+        });
+        loadInventory();
+        closeModal('edit-inventory-modal');
+      } catch (error) {
+        alert('خطا در به‌روزرسانی: ' + error.message);
+      }
+    }
+
+    async function deleteInventory(id) {
+      if (!confirm('آیا مطمئن هستید؟')) return;
+      try {
+        await fetch(`http://localhost:3000/inventory/${id}`, { method: 'DELETE' });
+        loadInventory();
+      } catch (error) {
+        alert('خطا در حذف: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

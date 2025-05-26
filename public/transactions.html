@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نرم‌افزار حسابداری - تراکنش‌ها</title>
+  <link href="./output.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body dir="rtl" class="min-h-screen bg-light font-sans transition-colors duration-300" id="theme-body">
+  <div class="container mx-auto p-4 max-w-5xl">
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold text-dark">تراکنش‌ها - <span id="username-display"></span></h1>
+      <div class="flex space-x-2">
+        <button onclick="openModal('add-transaction-modal')" class="btn btn-blue flex items-center">
+          <i class="fas fa-plus w-4 h-4 mr-1"></i>
+          ثبت تراکنش
+        </button>
+        <a href="index.html" class="btn btn-gray flex items-center">
+          <i class="fas fa-home w-4 h-4 mr-1"></i>
+          بازگشت
+        </a>
+      </div>
+    </div>
+
+    <!-- جستجو -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-search w-5 h-5 mr-1 text-blue-600"></i>
+        جستجوی تراکنش‌ها
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input id="search-part-name" type="text" placeholder="نام قطعه" class="input" />
+        <input id="search-date" type="date" class="input" />
+        <button onclick="searchTransactions()" class="btn btn-blue flex items-center justify-center">
+          <i class="fas fa-search w-4 h-4 mr-1"></i>
+          جستجو
+        </button>
+      </div>
+    </div>
+
+    <!-- جدول تراکنش‌ها -->
+    <div class="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-table w-5 h-5 mr-1 text-blue-600"></i>
+        تراکنش‌ها
+      </h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>شناسه</th>
+            <th>نام قطعه</th>
+            <th>طرف حساب</th>
+            <th>تعداد</th>
+            <th>قیمت واحد</th>
+            <th>جمع کل</th>
+            <th>تاریخ</th>
+            <th>ویرایش</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody id="transactions-body"></tbody>
+      </table>
+    </div>
+
+    <!-- مودال ثبت تراکنش -->
+    <div id="add-transaction-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-plus w-5 h-5 mr-1 text-blue-600"></i>
+          ثبت تراکنش
+        </h2>
+        <div class="space-y-3">
+          <input id="part-name" type="text" placeholder="نام قطعه" class="input" />
+          <input id="quantity" type="number" placeholder="تعداد" class="input" />
+          <input id="price" type="number" placeholder="قیمت واحد (تومان)" class="input" />
+          <input id="date" type="date" class="input" value="" />
+          <select id="party-id" class="input">
+            <option value="">انتخاب طرف حساب (اختیاری)</option>
+          </select>
+          <div class="flex space-x-2">
+            <button onclick="addTransaction()" class="btn btn-blue flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ثبت
+            </button>
+            <button onclick="closeModal('add-transaction-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- مودال ویرایش تراکنش -->
+    <div id="edit-transaction-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-edit w-5 h-5 mr-1 text-yellow-600"></i>
+          ویرایش تراکنش
+        </h2>
+        <div class="space-y-3">
+          <input id="edit-part-name" type="text" placeholder="نام قطعه" class="input" />
+          <input id="edit-quantity" type="number" placeholder="تعداد" class="input" />
+          <input id="edit-price" type="number" placeholder="قیمت واحد (تومان)" class="input" />
+          <input id="edit-date" type="date" class="input" />
+          <select id="edit-party-id" class="input">
+            <option value="">انتخاب طرف حساب (اختیاری)</option>
+          </select>
+          <input id="edit-transaction-id" type="hidden" />
+          <div class="flex space-x-2">
+            <button onclick="updateTransaction()" class="btn btn-blue flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ذخیره
+            </button>
+            <button onclick="closeModal('edit-transaction-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    let parties = [];
+
+    if (!currentUser) window.location.href = 'index.html';
+    document.getElementById('username-display').textContent = currentUser.username;
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    // بارگذاری تم
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme') || 'light';
+      applyTheme(theme);
+      loadParties();
+      loadTransactions();
+    });
+
+    function applyTheme(theme) {
+      const body = document.getElementById('theme-body');
+      if (theme === 'dark') {
+        body.classList.remove('bg-light');
+        body.classList.add('bg-dark');
+        body.querySelectorAll('.text-dark').forEach(el => {
+          el.classList.remove('text-dark');
+          el.classList.add('text-light');
+        });
+      } else {
+        body.classList.remove('bg-dark');
+        body.classList.add('bg-light');
+        body.querySelectorAll('.text-light').forEach(el => {
+          el.classList.remove('text-light');
+          el.classList.add('text-dark');
+        });
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      if (modalId === 'add-transaction-modal') {
+        document.getElementById('part-name').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('price').value = '';
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('party-id').value = '';
+      } else if (modalId === 'edit-transaction-modal') {
+        document.getElementById('edit-part-name').value = '';
+        document.getElementById('edit-quantity').value = '';
+        document.getElementById('edit-price').value = '';
+        document.getElementById('edit-date').value = '';
+        document.getElementById('edit-party-id').value = '';
+        document.getElementById('edit-transaction-id').value = '';
+      }
+    }
+
+    async function loadParties() {
+      try {
+        const response = await fetch('http://localhost:3000/parties');
+        parties = await response.json();
+        const partySelect = document.getElementById('party-id');
+        const editPartySelect = document.getElementById('edit-party-id');
+        partySelect.innerHTML = '<option value="">انتخاب طرف حساب (اختیاری)</option>';
+        editPartySelect.innerHTML = '<option value="">انتخاب طرف حساب (اختیاری)</option>';
+        parties.forEach(party => {
+          const option = document.createElement('option');
+          option.value = party.id;
+          option.textContent = `${party.name} (${party.type === 'customer' ? 'مشتری' : 'تأمین‌کننده'})`;
+          partySelect.appendChild(option.cloneNode(true));
+          editPartySelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error loading parties:', error);
+      }
+    }
+
+    async function loadTransactions(filter = {}) {
+      try {
+        const url = new URL(`http://localhost:3000/transactions/${currentUser.id}`);
+        if (filter.partName) url.searchParams.append('partName', filter.partName);
+        if (filter.date) url.searchParams.append('date', filter.date);
+        const response = await fetch(url);
+        const transactions = await response.json();
+        const tbody = document.getElementById('transactions-body');
+        tbody.innerHTML = '';
+        if (transactions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-gray-500">هیچ تراکنشی یافت نشد</td></tr>';
+        } else {
+          transactions.forEach(t => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${t.id}</td>
+              <td>${t.partName}</td>
+              <td>${t.partyName || '-'}</td>
+              <td>${t.quantity}</td>
+              <td>${t.price.toLocaleString()}</td>
+              <td>${t.total.toLocaleString()}</td>
+              <td>${t.date}</td>
+              <td><button onclick='editTransaction(${t.id}, "${t.partName}", ${t.quantity}, ${t.price}, "${t.date}", ${t.partyId || 'null'})' class="btn btn-blue flex items-center"><i class="fas fa-edit w-4 h-4 mr-1"></i>ویرایش</button></td>
+              <td><button onclick='deleteTransaction(${t.id})' class="btn btn-red flex items-center"><i class="fas fa-trash w-4 h-4 mr-1"></i>حذف</button></td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading transactions:', error);
+        document.getElementById('transactions-body').innerHTML = '<tr><td colspan="9" class="text-center text-gray-500">خطا در بارگذاری</td></tr>';
+      }
+    }
+
+    async function searchTransactions() {
+      const partName = document.getElementById('search-part-name').value;
+      const date = document.getElementById('search-date').value;
+      const filter = {};
+      if (partName) filter.partName = partName;
+      if (date) filter.date = date;
+      loadTransactions(filter);
+    }
+
+    async function addTransaction() {
+      const partName = document.getElementById('part-name').value;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const price = parseFloat(document.getElementById('price').value);
+      const date = document.getElementById('date').value;
+      const partyId = document.getElementById('party-id').value || null;
+      const total = quantity * price;
+      if (!partName || !quantity || !price || !date) {
+        alert('لطفاً همه فیلدها را پر کنید');
+        return;
+      }
+      try {
+        await fetch('http://localhost:3000/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partName, quantity, price, total, date, userId: currentUser.id, partyId })
+        });
+        loadTransactions();
+        closeModal('add-transaction-modal');
+      } catch (error) {
+        alert('خطا در ثبت: ' + error.message);
+      }
+    }
+
+    function editTransaction(id, partName, quantity, price, date, partyId) {
+      document.getElementById('edit-transaction-id').value = id;
+      document.getElementById('edit-part-name').value = partName;
+      document.getElementById('edit-quantity').value = quantity;
+      document.getElementById('edit-price').value = price;
+      document.getElementById('edit-date').value = date;
+      document.getElementById('edit-party-id').value = partyId || '';
+      openModal('edit-transaction-modal');
+    }
+
+    async function updateTransaction() {
+      const id = document.getElementById('edit-transaction-id').value;
+      const partName = document.getElementById('edit-part-name').value;
+      const quantity = parseInt(document.getElementById('edit-quantity').value);
+      const price = parseFloat(document.getElementById('edit-price').value);
+      const date = document.getElementById('edit-date').value;
+      const partyId = document.getElementById('edit-party-id').value || null;
+      const total = quantity * price;
+      if (!partName || !quantity || !price || !date) {
+        alert('لطفاً همه فیلدها را پر کنید');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/transactions/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partName, quantity, price, total, date, userId: currentUser.id, partyId })
+        });
+        loadTransactions();
+        closeModal('edit-transaction-modal');
+      } catch (error) {
+        alert('خطا در به‌روزرسانی: ' + error.message);
+      }
+    }
+
+    async function deleteTransaction(id) {
+      if (!confirm('آیا مطمئن هستید؟')) return;
+      try {
+        await fetch(`http://localhost:3000/transactions/${id}`, { method: 'DELETE' });
+        loadTransactions();
+      } catch (error) {
+        alert('خطا در حذف: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

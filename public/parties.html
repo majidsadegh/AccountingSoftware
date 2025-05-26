@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نرم‌افزار حسابداری - طرف حساب‌ها</title>
+  <link href="./output.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body dir="rtl" class="min-h-screen bg-light font-sans transition-colors duration-300" id="theme-body">
+  <div class="container mx-auto p-4 max-w-5xl">
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold text-dark">طرف حساب‌ها - <span id="username-display"></span></h1>
+      <div class="flex space-x-2">
+        <button onclick="openModal('add-party-modal')" class="btn btn-purple flex items-center">
+          <i class="fas fa-plus w-4 h-4 mr-1"></i>
+          ثبت طرف حساب
+        </button>
+        <a href="index.html" class="btn btn-gray flex items-center">
+          <i class="fas fa-home w-4 h-4 mr-1"></i>
+          بازگشت
+        </a>
+      </div>
+    </div>
+
+    <!-- جدول طرف حساب‌ها -->
+    <div class="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-users w-5 h-5 mr-1 text-purple-600"></i>
+        طرف حساب‌ها
+      </h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>شناسه</th>
+            <th>نام</th>
+            <th>نوع</th>
+            <th>تلفن</th>
+            <th>آدرس</th>
+            <th>ویرایش</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody id="parties-body"></tbody>
+      </table>
+    </div>
+
+    <!-- مودال ثبت طرف حساب -->
+    <div id="add-party-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-users w-5 h-5 mr-1 text-purple-600"></i>
+          ثبت طرف حساب
+        </h2>
+        <div class="space-y-3">
+          <input id="party-name" type="text" placeholder="نام طرف حساب" class="input" />
+          <select id="party-type" class="input">
+            <option value="customer">مشتری</option>
+            <option value="supplier">تأمین‌کننده</option>
+          </select>
+          <input id="party-phone" type="text" placeholder="شماره تلفن" class="input" />
+          <input id="party-address" type="text" placeholder="آدرس" class="input" />
+          <div class="flex space-x-2">
+            <button onclick="addParty()" class="btn btn-purple flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ثبت
+            </button>
+            <button onclick="closeModal('add-party-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- مودال ویرایش طرف حساب -->
+    <div id="edit-party-modal" class="modal hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+          <i class="fas fa-edit w-5 h-5 mr-1 text-purple-600"></i>
+          ویرایش طرف حساب
+        </h2>
+        <div class="space-y-3">
+          <input id="edit-party-name" type="text" placeholder="نام طرف حساب" class="input" />
+          <select id="edit-party-type" class="input">
+            <option value="customer">مشتری</option>
+            <option value="supplier">تأمین‌کننده</option>
+          </select>
+          <input id="edit-party-phone" type="text" placeholder="شماره تلفن" class="input" />
+          <input id="edit-party-address" type="text" placeholder="آدرس" class="input" />
+          <input id="edit-party-id" type="hidden" />
+          <div class="flex space-x-2">
+            <button onclick="updateParty()" class="btn btn-purple flex-1 flex items-center justify-center">
+              <i class="fas fa-save w-4 h-4 mr-1"></i>
+              ذخیره
+            </button>
+            <button onclick="closeModal('edit-party-modal')" class="btn btn-gray flex-1 flex items-center justify-center">
+              <i class="fas fa-times w-4 h-4 mr-1"></i>
+              لغو
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!currentUser) window.location.href = 'index.html';
+    document.getElementById('username-display').textContent = currentUser.username;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme') || 'light';
+      applyTheme(theme);
+      loadParties();
+    });
+
+    function applyTheme(theme) {
+      const body = document.getElementById('theme-body');
+      if (theme === 'dark') {
+        body.classList.remove('bg-light');
+        body.classList.add('bg-dark');
+        body.querySelectorAll('.text-dark').forEach(el => {
+          el.classList.remove('text-dark');
+          el.classList.add('text-light');
+        });
+      } else {
+        body.classList.remove('bg-dark');
+        body.classList.add('bg-light');
+        body.querySelectorAll('.text-light').forEach(el => {
+          el.classList.remove('text-light');
+          el.classList.add('text-dark');
+        });
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      if (modalId === 'add-party-modal') {
+        document.getElementById('party-name').value = '';
+        document.getElementById('party-type').value = 'customer';
+        document.getElementById('party-phone').value = '';
+        document.getElementById('party-address').value = '';
+      } else if (modalId === 'edit-party-modal') {
+        document.getElementById('edit-party-name').value = '';
+        document.getElementById('edit-party-type').value = 'customer';
+        document.getElementById('edit-party-phone').value = '';
+        document.getElementById('edit-party-address').value = '';
+        document.getElementById('edit-party-id').value = '';
+      }
+    }
+
+    async function loadParties() {
+      try {
+        const response = await fetch('http://localhost:3000/parties');
+        const parties = await response.json();
+        const tbody = document.getElementById('parties-body');
+        tbody.innerHTML = '';
+        if (parties.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">هیچ طرف حسابی ثبت نشده</td></tr>';
+        } else {
+          parties.forEach(p => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${p.id}</td>
+              <td>${p.name}</td>
+              <td>${p.type === 'customer' ? 'مشتری' : 'تأمین‌کننده'}</td>
+              <td>${p.phone || '-'}</td>
+              <td>${p.address || '-'}</td>
+              <td><button onclick='editParty(${p.id}, "${p.name}", "${p.type}", "${p.phone || ''}", "${p.address || ''}")' class="btn btn-purple flex items-center"><i class="fas fa-edit w-4 h-4 mr-1"></i>ویرایش</button></td>
+              <td><button onclick='deleteParty(${p.id})' class="btn btn-red flex items-center"><i class="fas fa-trash w-4 h-4 mr-1"></i>حذف</button></td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading parties:', error);
+        document.getElementById('parties-body').innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">خطا در بارگذاری</td></tr>';
+      }
+    }
+
+    async function addParty() {
+      const name = document.getElementById('party-name').value;
+      const type = document.getElementById('party-type').value;
+      const phone = document.getElementById('party-phone').value;
+      const address = document.getElementById('party-address').value;
+      if (!name || !type) {
+        alert('نام و نوع طرف حساب اجباری است');
+        return;
+      }
+      try {
+        await fetch('http://localhost:3000/parties', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, type, phone, address })
+        });
+        loadParties();
+        closeModal('add-party-modal');
+      } catch (error) {
+        alert('خطا در ثبت: ' + error.message);
+      }
+    }
+
+    function editParty(id, name, type, phone, address) {
+      document.getElementById('edit-party-id').value = id;
+      document.getElementById('edit-party-name').value = name;
+      document.getElementById('edit-party-type').value = type;
+      document.getElementById('edit-party-phone').value = phone;
+      document.getElementById('edit-party-address').value = address;
+      openModal('edit-party-modal');
+    }
+
+    async function updateParty() {
+      const id = document.getElementById('edit-party-id').value;
+      const name = document.getElementById('edit-party-name').value;
+      const type = document.getElementById('edit-party-type').value;
+      const phone = document.getElementById('edit-party-phone').value;
+      const address = document.getElementById('edit-party-address').value;
+      if (!name || !type) {
+        alert('نام و نوع طرف حساب اجباری است');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/parties/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, type, phone, address })
+        });
+        loadParties();
+        closeModal('edit-party-modal');
+      } catch (error) {
+        alert('خطا در به‌روزرسانی: ' + error.message);
+      }
+    }
+
+    async function deleteParty(id) {
+      if (!confirm('آیا مطمئن هستید؟')) return;
+      try {
+        await fetch(`http://localhost:3000/parties/${id}`, { method: 'DELETE' });
+        loadParties();
+      } catch (error) {
+        alert('خطا در حذف: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

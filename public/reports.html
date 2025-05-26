@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نرم‌افزار حسابداری - گزارش‌ها</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link href="./output.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body dir="rtl" class="min-h-screen bg-light font-sans transition-colors duration-300" id="theme-body">
+  <div class="container mx-auto p-4 max-w-5xl">
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold text-dark">گزارش‌ها - <span id="username-display"></span></h1>
+      <div class="flex space-x-2">
+        <a href="index.html" class="btn btn-gray flex items-center">
+          <i class="fas fa-home w-4 h-4 mr-1"></i>
+          بازگشت
+        </a>
+        <button onclick="logout()" class="btn btn-red flex items-center">
+          <i class="fas fa-sign-out-alt w-4 h-4 mr-1"></i>
+          خروج
+        </button>
+      </div>
+    </div>
+
+    <!-- گزارش شریک -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-chart-line w-5 h-5 mr-1 text-yellow-600"></i>
+        گزارش شریک
+      </h2>
+      <div id="partner-report-content" class="text-dark"></div>
+    </div>
+
+    <!-- نمودار فروش -->
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold text-dark mb-3 flex items-center">
+        <i class="fas fa-chart-bar w-5 h-5 mr-1 text-blue-600"></i>
+        فروش ماهانه
+      </h2>
+      <canvas id="sales-chart-canvas" class="w-full h-64"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    let salesChart = null;
+
+    if (!currentUser) window.location.href = 'index.html';
+    document.getElementById('username-display').textContent = currentUser.username;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme') || 'light';
+      applyTheme(theme);
+      loadPartnerReport();
+      loadSalesChart();
+    });
+
+    function applyTheme(theme) {
+      const body = document.getElementById('theme-body');
+      if (theme === 'dark') {
+        body.classList.remove('bg-light');
+        body.classList.add('bg-dark');
+        body.querySelectorAll('.text-dark').forEach(el => {
+          el.classList.remove('text-dark');
+          el.classList.add('text-light');
+        });
+      } else {
+        body.classList.remove('bg-dark');
+        body.classList.add('bg-light');
+        body.querySelectorAll('.text-light').forEach(el => {
+          el.classList.remove('text-light');
+          el.classList.add('text-dark');
+        });
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
+
+    async function loadPartnerReport() {
+      try {
+        const response = await fetch(`http://localhost:3000/partner-report/${currentUser.id}`);
+        const { totalProfit, partnerProfit, sharePercentage } = await response.json();
+        const reportDiv = document.getElementById('partner-report-content');
+        if (totalProfit === 0) {
+          reportDiv.innerHTML = '<p class="text-gray-500">هیچ تراکنشی ثبت نشده است</p>';
+        } else {
+          reportDiv.innerHTML = `
+            <p>درصد مالکیت شما: <span class="font-semibold">${sharePercentage}%</span></p>
+            <p>مجموع فروش شما: <span class="font-semibold">${totalProfit.toLocaleString()} تومان</span></p>
+            <p>سود شما: <span class="font-semibold">${partnerProfit.toLocaleString()} تومان</span></p>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading partner report:', error);
+        document.getElementById('partner-report-content').innerHTML = '<p class="text-red-500">خطا در بارگذاری گزارش</p>';
+      }
+    }
+
+    async function loadSalesChart() {
+      try {
+        const response = await fetch(`http://localhost:3000/monthly-sales/${currentUser.id}`);
+        const monthlySales = await response.json();
+        const ctx = document.getElementById('sales-chart-canvas').getContext('2d');
+        if (salesChart) salesChart.destroy();
+        salesChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: monthlySales.map(s => s.month),
+            datasets: [{
+              label: 'فروش ماهانه (تومان)',
+              data: monthlySales.map(s => s.totalSales),
+              backgroundColor: '#3b82f6',
+              borderColor: '#1e40af',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: 'مبلغ (تومان)' } },
+              x: { title: { display: true, text: 'ماه' } }
+            },
+            plugins: { legend: { display: true } }
+          }
+        });
+      } catch (error) {
+        console.error('Error loading sales chart:', error);
+        document.getElementById('sales-chart-canvas').parentNode.innerHTML = '<p class="text-red-500">خطا در بارگذاری نمودار</p>';
+      }
+    }
+  </script>
+</body>
+</html>

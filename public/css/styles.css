@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, sans-serif;
+}
+.bg-light { background: linear-gradient(to bottom right, #e0f7fa, #f3e5f5); }
+.bg-dark { background: #1f2937; color: #f3f4f6; }
+.text-dark { color: #1f2937; }
+.text-light { color: #f3f4f6; }
+.card { @apply bg-white p-4 rounded-lg shadow-md hover:shadow-lg cursor-pointer; }
+.btn { @apply px-4 py-2 rounded-lg text-center; }
+.btn-blue { @apply bg-blue-600 text-white hover:bg-blue-700; }
+.btn-green { @apply bg-green-600 text-white hover:bg-green-700; }
+.btn-purple { @apply bg-purple-600 text-white hover:bg-purple-700; }
+.btn-red { @apply bg-red-600 text-white hover:bg-red-600; }
+.btn-gray { @apply bg-gray-500 text-white hover:bg-gray-600; }
+.input { @apply p-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500; }
+.table { @apply min-w-full border-collapse; }
+.table th, .table td { @apply p-3 border-t text-right; }
+.modal { @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20; }
+
+.toolbar-btn {
+  @apply flex flex-col items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 rounded-md transition-colors duration-150;
+}
+
+.toolbar-btn i {
+  @apply mb-1;
+}
+
+.action-btn {
+  @apply text-white py-1 px-3 rounded-md flex items-center text-sm font-medium transition-colors duration-150;
+}
+
+.input-sm {
+    @apply block w-full px-2 py-1 text-sm border rounded-md shadow-sm;
+}
